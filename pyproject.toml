@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "samsung-audit-rag-structured"
+version = "0.2.0"
+description = "Structured HTM audit report parser + PostgreSQL/pgvector ingestion project"
+authors = ["OpenAI <example@example.com>"]
+readme = "README.md"
+packages = [{ include = "app" }]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.13"
+beautifulsoup4 = "^4.13.4"
+lxml = "^5.3.0"
+html5lib = "^1.1"
+psycopg = {version = "^3.2.6", extras = ["binary"]}
+python-dotenv = "^1.1.0"
+sentence-transformers = "^5.3.0"
+transformers = ">=4.51.0,<5.0.0"
+langchain-text-splitters = "^0.3.8"
+tqdm = "^4.67.1"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.11.2"
+
+[build-system]
+requires = ["poetry-core>=1.9.0"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,53 @@
+# samsung_audit_rag_structured_risk 공유용 필수 파일 목록
+# 목적: 다른 사람이 동일한 local/hybrid/auto 라우팅 실행을 재현하기 위한 파일 세트
+# 기준 루트: samsung_audit_rag_structured_risk/
+
+[핵심 실행 파일]
+app/search_local.py
+app/search_hybrid.py
+app/qa_local.py
+app/qa_hybrid.py
+app/qa_auto.py
+app/cli_local.py
+app/cli_hybrid.py
+
+[공통 의존 모듈]
+app/config.py
+app/db.py
+app/embedder.py
+app/generator.py
+app/qa.py
+app/search.py
+app/search_1.py
+app/__init__.py
+
+[재적재/파싱 재현에 필요한 모듈]
+app/parser.py
+app/chunker.py
+app/ingest.py
+
+[환경/패키지/설정]
+pyproject.toml
+poetry.lock
+.env.example
+README.md
+
+[DB 스키마]
+sql/init.sql
+sql/migrations/001_add_pipeline_id.sql
+
+[선택: 동일 모델/데이터까지 완전 재현 시]
+data/models/local-embedding-v1/   # 모델 폴더 전체
+# data/html/                       # 원문 HTML을 재적재하려면 필요
+# data/parsed/                     # 파싱 결과 공유 시 필요
+
+[실행 확인 예시 질문]
+- 2020년 지급보증한 내역에서 관련 차입금 총액은 얼마인가?
+- 2020년 지급보증한 내역에서 채무보증한도 총액은 얼마인가?
+- 소송 관련 리스크가 언급된 주석을 찾아줘
+- 2014~2024년 우발부채/약정 관련 흐름을 설명해줘
+
+[권장 실행 엔트리]
+- poetry run python -m app.qa_local "질문"
+- poetry run python -m app.qa_hybrid "질문"
+- poetry run python -m app.qa_auto "질문"
