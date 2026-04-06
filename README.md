@@ -1,6 +1,6 @@
 # samsung_audit_rag_structured_risk
 
-삼성전자 감사보고서(2014~2024)를 대상으로, **HTML 감사보고서를 구조적으로 파싱하고**, **표와 주석을 DB에 적재한 뒤**, **질문에 대해 Local 방식으로 답변하는 RAG 프로젝트**입니다.
+삼성전자 감사보고서(2014~2024)를 대상으로, **HTML 감사보고서를 구조적으로 파싱하고**, **표와 주석을 DB에 적재한 뒤**, **질문에 대해 주석 우선 탐색 방식으로 답변하는 5조의 사이드 RAG 프로젝트**입니다.
 
 ---
 
@@ -11,7 +11,7 @@
 감사보고서 안에는 다음처럼 서로 성격이 다른 정보가 섞여 있습니다.
 
 - 긴 설명형 텍스트
-- 주석(Notes)
+- 주석
 - 복잡한 표
 - 표 안의 셀 단위 숫자
 - 특정 리스크를 나타내는 문장
@@ -71,8 +71,6 @@ Local 검색
 답변 생성
 ```
 
-이 흐름만 이해해도 프로젝트가 훨씬 덜 복잡해 보입니다.
-
 ---
 
 ## 4. 폴더 구조
@@ -114,9 +112,9 @@ samsung_audit_rag_structured_risk/
 
 ---
 
-## 5. 처음 보는 사람이 꼭 알아야 할 파일 6개
+## 5. 처음 보시는 분들이 꼭 알아야 할 파일 6개
 
-코드가 많아 보여도, 처음에는 아래 6개만 보면 됩니다.
+아래 6개만 보시면 됩니다.
 
 ### 1) `app/parser.py`
 가장 먼저 원본 HTML을 읽어 **구조화된 보고서 객체**로 바꿉니다.
@@ -128,7 +126,6 @@ samsung_audit_rag_structured_risk/
 - 보고서 연도 추출
 - 구조화 JSON 생성
 
-즉, 원본 문서를 “기계가 다루기 쉬운 형태”로 바꾸는 출발점입니다.
 
 ### 2) `app/chunker.py`
 파싱된 결과를 검색 가능한 단위로 나눕니다.
@@ -138,7 +135,7 @@ samsung_audit_rag_structured_risk/
 - note 단위 / subsection 단위 / table 관련 chunk 생성
 - 구조화 표(`structured_tables`)와 셀(`structured_table_cells`) 행 생성
 
-즉, **검색 단위**와 **정밀 추출 단위**를 만드는 단계입니다.
+**검색 단위**와 **정밀 추출 단위**를 만드는 단계입니다.
 
 ### 3) `app/ingest.py`
 실제 적재 파이프라인의 중심입니다.
@@ -168,8 +165,6 @@ samsung_audit_rag_structured_risk/
 - 구조화 표/셀 정보와 연결
 - 정밀한 amount/evidence 추출 지원
 
-즉, **핀셋형 질의응답** 담당입니다.
-
 ### 5) `app/qa_local.py`
 `search_local.py`의 결과를 사람이 읽기 쉬운 발표용 답변으로 바꿉니다.
 
@@ -192,7 +187,7 @@ samsung_audit_rag_structured_risk/
 - LLM 기반 생성형 답변을 시험하거나
 - 개발 중 디버깅용으로 검색/생성 결과를 확인할 때 사용합니다.
 
-즉, `qa_local.py`가 발표용 진입점이라면, `qa.py`는 실험용 진입점에 가깝습니다.
+`qa_local.py`가 발표용 진입점이라면, `qa.py`는 실험용 진입점에 가깝습니다.
 
 ---
 
@@ -210,7 +205,7 @@ samsung_audit_rag_structured_risk/
 - 원본 HTML
 - 파싱된 JSON
 
-즉, “원문과 구조화 결과의 원본 저장소”입니다.
+ “원문과 구조화 결과의 원본 저장소”입니다.
 
 ### 2) `chunks`
 검색용 텍스트 청크를 저장합니다.
@@ -224,7 +219,7 @@ samsung_audit_rag_structured_risk/
 - 본문 content
 - embedding vector
 
-즉, **벡터 검색의 주된 대상**입니다.
+**벡터 검색의 주된 대상**입니다.
 
 ### 3) `structured_tables`
 표 자체의 메타데이터를 저장합니다.
@@ -237,7 +232,7 @@ samsung_audit_rag_structured_risk/
 - unit
 - risk_domain
 
-즉, “이 표가 어떤 표인지”를 설명하는 테이블입니다.
+“이 표가 어떤 표인지”를 설명하는 테이블입니다.
 
 ### 4) `structured_table_cells`
 표의 셀 단위 값을 저장합니다.
@@ -250,7 +245,7 @@ samsung_audit_rag_structured_risk/
 - row_year
 - entity_label
 
-즉, **숫자 질의를 정확히 풀기 위한 핵심 테이블**입니다.
+**숫자 질의를 정확히 풀기 위한 핵심 테이블**입니다.
 
 ---
 
@@ -366,15 +361,7 @@ poetry run python -m app.ingest
 숫자/금액 질문에 적합합니다.
 
 ```bash
-poetry run python -m app.qa_local "2020년 지급보증한 내역에서 관련 차입금 총액은 얼마인가?"
-```
-
-### B. 개발용 QA 엔트리
-추출형 또는 LLM 기반 생성형 QA를 시험할 때 사용합니다.
-
-```bash
-poetry run python -m app.qa "2020년도 감사의견근거는 무엇이야?"
-poetry run python -m app.qa --llm "2020년도 감사의견근거는 무엇이야?"
+poetry run python -m app.qa_local --llm "2014년 비용 중 당기 원재료 등의 사용액 및 상품 매입액 등의 금액은?"
 ```
 
 ---
@@ -443,7 +430,7 @@ poetry run python -m app.qa --llm "2020년도 감사의견근거는 무엇이야
 ### `common_eval_utils.py`
 정답 비교, 지표 계산 등 공통 평가 로직을 담고 있습니다.
 
-즉, 이 프로젝트는 “검색/질의응답 시스템”일 뿐 아니라, **질문셋으로 성능을 측정할 수 있는 실험 프로젝트**이기도 합니다.
+이 프로젝트는 “검색/질의응답 시스템”일 뿐 아니라, **질문셋으로 성능을 측정할 수 있는 실험 프로젝트**이기도 합니다.
 
 ---
 
@@ -452,7 +439,7 @@ poetry run python -m app.qa --llm "2020년도 감사의견근거는 무엇이야
 ### Q1. `search.py`와 `search_local.py`는 뭐가 다른가?
 `search.py`는 사실상 `search_local.py`를 다시 내보내는 얇은 래퍼입니다.
 
-즉, 핵심 로직은 `search_local.py`에 있습니다.
+핵심 로직은 `search_local.py`에 있습니다.
 
 ### Q2. `qa.py`와 `qa_local.py`는 뭐가 다른가?
 - `qa_local.py`: 발표용/고정 포맷 응답
@@ -477,8 +464,6 @@ poetry run python -m app.qa --llm "2020년도 감사의견근거는 무엇이야
 
 ## 17. 현재 한계
 
-솔직히 말하면, 이 프로젝트는 모든 질문에 만능은 아닙니다.
-
 - 문서 전체를 넓게 종합하는 질문은 추가적인 근거 결합이 더 필요할 수 있음
 - exact number 추출에는 강하지만, 매우 추상적인 서술형 질문에는 한계가 있을 수 있음
 - LLM 생성 품질은 별도 모델/환경에 영향을 받음
@@ -499,7 +484,7 @@ cp .env.example .env
 docker compose up -d
 # data/html/ 에 감사보고서 html 넣기
 poetry run python -m app.ingest
-poetry run python -m app.qa_local "2020년 지급보증한 내역에서 관련 차입금 총액은 얼마인가?"
+poetry run python -m app.qa_local --llm "2014년 현금및현금성자산 중 당기말 예금 등의 금액은"
 ```
 
 ---
